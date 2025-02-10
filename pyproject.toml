@@ -1,0 +1,32 @@
+[project]
+name = "external-monitor-brighness"
+description = "The python tool to set the brightness of the external monitor"
+authors = [
+    {name = "Alexey Gumirov"},
+]
+license = { file = "LICENSE" }
+readme = "README.md"
+requires-python = ">=3.11, <3.14"
+dependencies = [
+    "apscheduler",
+    "astral",
+    "notify2",
+    "dbus-python"
+]
+dynamic = ["version"]
+
+[project.scripts]
+external-monitor-brightness = "app:main"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+license-files = ["LICENSE"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {attr = "app.__VERSION__"}

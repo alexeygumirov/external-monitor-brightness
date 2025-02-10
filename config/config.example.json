@@ -1,0 +1,45 @@
+{
+    "city": "Bremen",
+    "country": "Germany",
+    "timezone": "Europe/Berlin",
+    "latitude": 53.075144,
+    "longitude": 8.802161,
+    "default": {
+        "summer": {
+            "day_brightness": 100,
+            "night_brightness": 60,
+            "sunrise": "06:00",
+            "sunset": "21:00"
+        },
+        "winter": {
+            "day_brightness": 90,
+            "night_brightness": 60,
+            "sunrise": "08:00",
+            "sunset": "16:00"
+        }
+    },
+    "monitors": {
+        "HP-monitor-1": {
+            "serial": "abc1234d12",
+            "summer": {
+                "day_brightness": 100,
+                "night_brightness": 60
+            },
+            "winter": {
+                "day_brightness": 90,
+                "night_brightness": 60
+            }
+        },
+        "Acer-monitor-2": {
+            "serial": "cde3456g78",
+            "summer": {
+                "day_brightness": 100,
+                "night_brightness": 60
+            },
+            "winter": {
+                "day_brightness": 90,
+                "night_brightness": 60
+            }
+        }
+    }
+}
