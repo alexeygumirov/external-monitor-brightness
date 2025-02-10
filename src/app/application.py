@@ -405,7 +405,12 @@ def brightness_control_main_function(config: dict = DEFAULT_CONFIG) -> None:
             if current_brightness != brightness:
                 set_ddc_brightness(display, brightness)
                 send_notification(f"Night mode: {brightness}")
-                logging.info("Night mode. Brightness is set to: %d", brightness)
+                logging.info(
+                    "%s mode. Display %s brightness is set to: %d",
+                    "Night",
+                    display,
+                    brightness,
+                )
         return
 
     if s["dawn"] <= current_time < s["sunrise"]:
@@ -418,7 +423,12 @@ def brightness_control_main_function(config: dict = DEFAULT_CONFIG) -> None:
             if current_brightness != brightness:
                 set_ddc_brightness(display, brightness)
                 send_notification(f"Morning mode: {brightness}")
-                logging.info("Morning mode. Brightness is set to: %d", brightness)
+                logging.info(
+                    "%s mode. Display %s brightness is set to: %d",
+                    "Morning",
+                    display,
+                    brightness,
+                )
         return
 
     if s["sunrise"] <= current_time < s["sunrise"] + dt.timedelta(hours=1):
@@ -431,7 +441,12 @@ def brightness_control_main_function(config: dict = DEFAULT_CONFIG) -> None:
             if current_brightness != brightness:
                 set_ddc_brightness(display, brightness)
                 send_notification(f"Morning mode: {brightness}")
-                logging.info("Morning mode. Brightness is set to: %d", brightness)
+                logging.info(
+                    "%s mode. Display %s brightness is set to: %d",
+                    "Morning",
+                    display,
+                    brightness,
+                )
         return
 
     if (
@@ -445,7 +460,12 @@ def brightness_control_main_function(config: dict = DEFAULT_CONFIG) -> None:
             if current_brightness != brightness:
                 set_ddc_brightness(display, brightness)
                 send_notification(f"Day mode: {brightness}")
-                logging.info("Day mode. Brightness is set to: %d", brightness)
+                logging.info(
+                    "%s mode. Display %s brightness is set to: %d",
+                    "Day",
+                    display,
+                    brightness,
+                )
         return
 
     if s["sunset"] - dt.timedelta(hours=1) <= current_time < s["sunset"]:
@@ -458,7 +478,12 @@ def brightness_control_main_function(config: dict = DEFAULT_CONFIG) -> None:
             if current_brightness != brightness:
                 set_ddc_brightness(display, brightness)
                 send_notification(f"Evening mode: {brightness}")
-                logging.info("Evening mode. Brightness is set to: %d", brightness)
+                logging.info(
+                    "%s mode. Display %s brightness is set to: %d",
+                    "Evening",
+                    display,
+                    brightness,
+                )
         return
 
     if s["sunset"] <= current_time < s["dusk"]:
@@ -471,7 +496,12 @@ def brightness_control_main_function(config: dict = DEFAULT_CONFIG) -> None:
             if current_brightness != brightness:
                 set_ddc_brightness(display, brightness)
                 send_notification(f"Evening mode: {brightness}")
-                logging.info("Evening mode. Brightness is set to: %d", brightness)
+                logging.info(
+                    "%s mode. Display %s brightness is set to: %d",
+                    "Evening",
+                    display,
+                    brightness,
+                )
         return
 
     if s["dusk"] <= current_time:
@@ -481,7 +511,12 @@ def brightness_control_main_function(config: dict = DEFAULT_CONFIG) -> None:
             if current_brightness != brightness:
                 set_ddc_brightness(display, brightness)
                 send_notification(f"Night mode: {brightness}")
-                logging.info("Night mode. Brightness is set to: %d", brightness)
+                logging.info(
+                    "%s mode. Display %s brightness is set to: %d",
+                    "Night",
+                    display,
+                    brightness,
+                )
         return
 
 
