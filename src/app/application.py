@@ -385,6 +385,8 @@ def brightness_control_main_function(config: dict = DEFAULT_CONFIG) -> None:
     latitude = float(config.get("latitude", DEFAULT_CONFIG.get("latitude")))
     longitude = float(config.get("longitude", DEFAULT_CONFIG.get("longitude")))
 
+    logging.info("City: %s, Country: %s, Timezone: %s", city_name, country, timezone)
+
     city = LocationInfo(city_name, country, timezone, latitude, longitude)
 
     current_time = dt.datetime.now(tz=dt.timezone.utc).astimezone(
