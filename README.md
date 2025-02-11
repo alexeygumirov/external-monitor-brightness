@@ -4,12 +4,15 @@ This Python application is designed to automatically adjust the brightness of ex
 
 The application reads the dawn, sunrise, dusk and sunset times for a specified location and adjusts the brightness of the connected monitors gradually. From dawn to (sunrise + offset) time brightness is gradually increased from the night brightness to the day brightness. From (sunset - offset) to dusk time brightness is gradually decreased from the day brightness to the night brightness.
 The offset is set to 60 minutes by default, but can be changed.
+
 Number of steps for the brightness change is set to 4, but can be set beteween 1 and 10. One step means that brightness is changed at the time close to the dawn to a day brighness value and at the time close to dusk to a night brighness value.
+
 To monitor and adjust brighness the application starts a cron job that runs every 15 minutes by default between 5:00 and 23:00 (5 AM and 11 PM). Job launch interval can also be changed.
 
 > For more details about the parameters see the [Configuration](#Configuration) and [Options](#Options) sections.
 
 The image below shows the brightness levels for the day with the dawn at 05:55:00, sunrise at 06:32:00, sunset at 16:09:00 and dusk at 16:46:00.
+
 ![Brightness levels](./images/brightness_chart.png)
 
 The astral times for a given location (in the `config.json` file) are taken fro the [astral](hhttps://astral.readthedocs.io/en/latest/) library. Therefore no internet connection is needed for this application.
