@@ -116,6 +116,12 @@ After installation, you can run the application with the following command (put 
 external-monitor-brightness &
 ```
 
+Or with command line options:
+
+```bash
+external-monitor-brightness --cron-interval 20 --adjust-steps 5 --sunrise-sunset-offset 75 &
+```
+
 I recommend adding this command to your startup applications to ensure the application starts automatically when you log in.
 If you are using a desktop environment that supports systemd services, you can create a systemd service file to manage the application.
 
