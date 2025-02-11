@@ -26,7 +26,7 @@ import argparse
 import sys
 from app.application import start_app
 
-__VERSION__ = "1.3.1"
+__VERSION__ = "2.0.0"
 
 
 def main():
@@ -46,14 +46,51 @@ def main():
         help="Directory to store logs",
         default="/tmp/external-monitor-brightness",
     )
+    parser.add_argument(
+        "-s",
+        "--adjust-steps",
+        type=int,
+        help="Number of steps to adjust brightness. (default: 4)",
+        default=4,
+    )
+    parser.add_argument(
+        "-i",
+        "--cron-interval",
+        type=int,
+        help="Time interval in minutes to check for brightness adjustment. (default: 15)",
+        default=15,  # can be only 10, 15, 20 and 30
+    )
+    parser.add_argument(
+        "-o",
+        "--sunrise-sunset-offset",
+        type=int,
+        help="The offset in minutes to adjust the time of sunrise and sunset (minutes). (default: 60)",
+        default=60,
+    )
 
     arguments = parser.parse_args()
+    if arguments.adjust_steps not in range(1, 11):
+        print("Number of steps must be in the range of 1 - 10")
+        sys.exit(1)
+    if arguments.cron_interval not in [10, 15, 20, 30]:
+        print("Cron interval can be 10, 15, 20 or 30 min")
+        sys.exit(1)
+    if arguments.sunrise_sunset_offset < 0 or arguments.sunrise_sunset_offset > 120:
+        print("Sunrise and sunset offset must be in the range of 0 - 120")
+        sys.exit(1)
 
-    if len(sys.argv) == 1:
-        start_app(log_dir=arguments.log_directory)
-
-    if len(sys.argv) > 1:
-        if arguments.verbose:
-            start_app(log_level="debug", log_dir=arguments.log_directory)
-        else:
-            start_app(log_dir=arguments.log_directory)
+    if arguments.verbose:
+        start_app(
+            adjust_steps=arguments.adjust_steps,
+            cron_interval=arguments.cron_interval,
+            sunrise_sunset_offset=arguments.sunrise_sunset_offset,
+            log_level="debug",
+            log_dir=arguments.log_directory,
+        )
+    else:
+        start_app(
+            adjust_steps=arguments.adjust_steps,
+            cron_interval=arguments.cron_interval,
+            sunrise_sunset_offset=arguments.sunrise_sunset_offset,
+            log_dir=arguments.log_directory,
+        )

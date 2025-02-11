@@ -4,6 +4,9 @@
     "timezone": "Europe/Berlin",
     "latitude": 53.075144,
     "longitude": 8.802161,
+    "cron_interval": 15,
+    "adjust_steps": 4,
+    "sunrise_sunset_offset": 60,
     "default": {
         "summer": {
             "day_brightness": 100,

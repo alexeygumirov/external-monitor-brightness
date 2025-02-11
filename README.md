@@ -2,14 +2,12 @@
 
 This Python application is designed to automatically adjust the brightness of external monitors connected to a Linux machine based on the time of day and seasonal changes. It utilizes the [`ddcutil`](https://www.ddcutil.com/) tool to communicate with the monitors via the Display Data Channel (DDC) protocol.
 
-The application reads the dawn, sunrise, dusk and sunset times for a specified location and adjusts the brightness of the connected monitors gradually:
- - from dusk till down the brightness is set to the night value (default 60%)
- - from dawn till sunrise the brightness is set to the night value + 1/3 * difference between day and night values. E.g. if day value is 100% and night value is 60% the brightness will be set to 73.33%.
- - from sunrise till (sunrise + 1 hour) the brightness is set to the night value + 2/3 * difference between day and night values. E.g. if day value is 100% and night value is 60% the brightness will be set to 86.67%.
- - from (sunrise + 1 hour) till (sunset - 1 hour) the brightness is set to the day value.
- - from (sunset - 1 hour) till sunset the brightness is set to the night value + 2/3 * difference between day and night values. E.g. if day value is 100% and night value is 60% the brightness will be set to 86.67%.
- - from sunset till dusk the brightness is set to the night value + 1/3 * difference between day and night values. E.g. if day value is 100% and night value is 60% the brightness will be set to 73.33%.
- - from dusk till dawn the brightness is set to the night value (default 60%).
+The application reads the dawn, sunrise, dusk and sunset times for a specified location and adjusts the brightness of the connected monitors gradually. From dawn to (sunrise + offset) time brightness is gradually increased from the night brightness to the day brightness. From (sunset - offset) to dusk time brightness is gradually decreased from the day brightness to the night brightness.
+The offset is set to 60 minutes by default, but can be changed.
+Number of steps for the brightness change is set to 4, but can be set beteween 1 and 10. One step means that brightness is changed at the time close to the dawn to a day brighness value and at the time close to dusk to a night brighness value.
+To monitor and adjust brighness the application starts a cron job that runs every 15 minutes by default between 5:00 and 23:00 (5 AM and 11 PM). Job launch interval can also be changed.
+
+> For more details about the parameters see the [Configuration](#Configuration) and [Options](#Options) sections.
 
 The image below shows the brightness levels for the day with the dawn at 05:55:00, sunrise at 06:32:00, sunset at 16:09:00 and dusk at 16:46:00.
 ![Brightness levels](./images/brightness_chart.png)
@@ -68,6 +66,9 @@ The configuration file should have the following structure:
   "timezone": "Continent/City",
   "latitude": 50.7014831,
   "longitude": 7.1645746,
+  "cron_interval": 15,
+  "adjust_steps": 4,
+  "sunrise_sunset_offset": 60,
   "monitors": {
     "Monitor Model 1": {
       "serial": "Monitor Serial Number",
@@ -95,9 +96,14 @@ The configuration file should have the following structure:
 ```
 
 - `city`, `location`, `timezone`, `latitude`, and `longitude` are used to determine the sunrise and sunset times.
+- `cron_interval` (optional) specifies the interval in minutes between brightness adjustments. The default value is 15 minutes. Accepted values are 10, 15, 20 and 30.
+- `adjust_steps` (optional) specifies the number of steps for the brightness change. The default value is 4. Accepted values are 1 to 10.
+- `sunrise_sunset_offset` (optional) specifies the offset in minutes for the sunrise and sunset times. Offset is added to the sunrise time and deducted from the sunset time. The default value is 60 minutes. Can be set between 0 and 120 minutes.
 - `default` contains the default brightness settings for monitors not listed in the `monitors` section.
 - `monitors` (optional) contains specific brightness settings for individual monitor models and serial numbers. If not specified, the default settings will be used.
-    - To list your monitors, run `ddcutil detect --terse`.
+    - The name of the monitor section is not important and can be any string which is clear for you.
+    - Serial number is important, because it is used by the application to identify the monitor. It can be that you have two monitors of the same model and you want to set different brightness settings for them.
+    - To list your monitors and their serial numbers, run `ddcutil detect --terse`.
 
 ## Usage
 
@@ -114,9 +120,15 @@ By default, the application will run in the background (the dedicated cron job i
 
 ## Options
 
+- `-i, --cron-interval`: Specify the interval in minutes between brightness adjustments. (default: 15 minutes)
+    - Can be set to 10, 15, 20, or 30 minutes.
+- `-s, --adjust-steps`: Specify the number of steps for the brightness change. (default: 4)
+    - Can be set between 1 and 10.
+- `-o, --sunrise-sunset-offset`: Specify the offset in minutes for the sunrise and sunset times. (default: 60 minutes)
+    - Can be set between 0 and 120 minutes.
+- `-l, --log-directory`: Specify the directory for the application logs. (default: `/tmp/external-monitor-brightness`)
 - `-v, --version`: Display the application version.
 - `-vv, --verbose`: Enable verbose logging. (loging level is set to DEBUG)
-- `-l, --log-directory`: Specify the directory for the application logs. (default: `/tmp/external-monitor-brightness`)
 
 ### Environment variables
 

@@ -54,6 +54,9 @@ DEFAULT_CONFIG = {
     "timezone": "Europe/Berlin",
     "latitude": 53.075144,
     "longitude": 8.802161,
+    "adjust_steps": 4,  # Can be in range of 1-10
+    "cron_interval": 15,  # Can be 10, 15,20, 30 min
+    "sunrise_sunset_offset": 60,  # in minutes, Can be between 0 and 120 minutes
     "default": {
         "summer": {
             "day_brightness": 100,
@@ -160,6 +163,23 @@ def delete_lock_file(
         logging.info("Lock file deleted")
 
 
+def verify_config_inputs(config: dict) -> None:
+    """
+    Verifies inputs in the config dictionary.
+    If error is found, the script will exit with code 1.
+    """
+
+    if config["adjust_steps"] not in range(1, 11):
+        logging.error("Number of steps must be in the range of 1 - 10")
+        sys.exit(1)
+    if config["cron_interval"] not in [10, 15, 20, 30]:
+        logging.error("Cron interval can be 10, 15, 20 or 30 min")
+        sys.exit(1)
+    if config["sunrise_sunset_offset"] < 0 or config["sunrise_sunset_offset"] > 120:
+        logging.error("Sunrise and sunset offset must be in the range of 0 - 120")
+        sys.exit(1)
+
+
 def get_config() -> dict:
     """
     Gets the config from the config file
@@ -173,6 +193,10 @@ def get_config() -> dict:
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             config = json.loads(f.read())
+        for item in DEFAULT_CONFIG.items():
+            if item[0] not in config:
+                config[item[0]] = item[1]
+        verify_config_inputs(config)
     except FileNotFoundError:
         logging.error("Config file not found, using default config")
         config = DEFAULT_CONFIG
@@ -304,7 +328,7 @@ def get_ddc_brightness(display_id: int) -> int:
 
 
 def map_display_parameters(
-    connected_displays: list[dict], configuration: dict = DEFAULT_CONFIG
+    connected_displays: list[dict], configuration: dict = None
 ) -> dict:
     """
     Maps the display parameters to the connected displays
@@ -316,6 +340,10 @@ def map_display_parameters(
     Returns:
         dict: Dictionary with display parameters
     """
+
+    if not configuration:
+        configuration = DEFAULT_CONFIG
+
     mapped_displays = {}
     season = "winter" if is_winter() else "summer"
     if not connected_displays:
@@ -364,12 +392,12 @@ def send_notification(message: str) -> None:
     """
 
     notify2.init("DDC Brightness Controller")
-    notification = notify2.Notification("DDC Brightness", message)
+    notification = notify2.Notification("Display Brightness", message)
     notification.set_urgency(notify2.URGENCY_NORMAL)
     notification.show()
 
 
-def brightness_control_main_function(config: dict = DEFAULT_CONFIG) -> None:
+def brightness_control_main_function(config: dict) -> None:
     """
     Main function for brightness control
 
@@ -379,148 +407,112 @@ def brightness_control_main_function(config: dict = DEFAULT_CONFIG) -> None:
     Returns:
         None
     """
-    city_name = config.get("city", DEFAULT_CONFIG.get("city"))
-    country = config.get("location", DEFAULT_CONFIG.get("country"))
-    timezone = config.get("timezone", DEFAULT_CONFIG.get("timezone"))
-    latitude = float(config.get("latitude", DEFAULT_CONFIG.get("latitude")))
-    longitude = float(config.get("longitude", DEFAULT_CONFIG.get("longitude")))
 
-    logging.info("City: %s, Country: %s, Timezone: %s", city_name, country, timezone)
+    def get_required_brightness(day_brightness: int, night_brightness: int) -> int:
+        """
+        Returns the required brightness based on the current time
 
-    city = LocationInfo(city_name, country, timezone, latitude, longitude)
+        Args:
+            day_brightness (int): Day brightness
+            night_brightness (int): Night brightness
 
-    current_time = dt.datetime.now(tz=dt.timezone.utc).astimezone(
-        ZoneInfo(city.timezone)
-    )
-    s = sun(city.observer, date=current_time, tzinfo=city.timezone)
+        Returns:
+            int: Required brightness
+        """
+        city_name = config.get("city", DEFAULT_CONFIG.get("city"))
+        country = config.get("location", DEFAULT_CONFIG.get("country"))
+        timezone = config.get("timezone", DEFAULT_CONFIG.get("timezone"))
+        latitude = float(config.get("latitude", DEFAULT_CONFIG.get("latitude")))
+        longitude = float(config.get("longitude", DEFAULT_CONFIG.get("longitude")))
+        logging.info(
+            "City: %s, Country: %s, Timezone: %s", city_name, country, timezone
+        )
+        city = LocationInfo(city_name, country, timezone, latitude, longitude)
+        current_time = dt.datetime.now(tz=dt.timezone.utc).astimezone(
+            ZoneInfo(city.timezone)
+        )
+        s = sun(city.observer, date=current_time, tzinfo=city.timezone)
+        logging.debug("Astral data: %s", s)
+        t0 = s["dawn"]
+        t1 = s["sunrise"] + dt.timedelta(minutes=int(config["sunrise_sunset_offset"]))
+        t2 = s["sunset"] - dt.timedelta(minutes=int(config["sunrise_sunset_offset"]))
+        t3 = s["dusk"]
+        adjust_steps = int(config["adjust_steps"])
+
+        if adjust_steps > 1:
+            increase_time_intervals = (t1 - t0) / (adjust_steps - 1)
+            decrease_time_intervals = (t3 - t2) / (adjust_steps - 1)
+            brightness_step = (day_brightness - night_brightness) / adjust_steps
+
+            brightness_array = []
+            increase_brightness_array = [
+                (
+                    t0 + i * increase_time_intervals,
+                    night_brightness + (i + 1) * brightness_step,
+                )
+                for i in range(adjust_steps)
+            ]
+            decrease_brightness_array = [
+                (
+                    t2 + i * decrease_time_intervals,
+                    day_brightness - (i + 1) * brightness_step,
+                )
+                for i in range(adjust_steps)
+            ]
+            brightness_array.extend(increase_brightness_array)
+            brightness_array.extend(decrease_brightness_array)
+            logging.debug("Brightness array: %s", brightness_array)
+            required_brightness = min(
+                brightness_array,
+                key=lambda x: current_time - x[0]
+                if current_time > x[0]
+                else dt.timedelta(hours=24),
+            )
+            return int(required_brightness[1])
+
+        brightness_array = [(t0, day_brightness), (t3, night_brightness)]
+        logging.debug("Brightness array: %s", brightness_array)
+        required_brightness = min(
+            brightness_array,
+            key=lambda x: current_time - x[0]
+            if current_time > x[0]
+            else dt.timedelta(hours=24),
+        )
+        return required_brightness[1]
+
+    if not config:
+        config = DEFAULT_CONFIG
+
     external_displays = get_ddc_displays()
+    logging.debug("External displays: %s", external_displays)
     if not external_displays:
         return
     parameters_map = map_display_parameters(external_displays, config)
+    logging.debug("Parameters map: %s", parameters_map)
 
-    if current_time < s["dawn"]:
-        for display, params in parameters_map:
-            brightness = params["night_brightness"]
-            current_brightness = get_ddc_brightness(display)
-            if current_brightness != brightness:
-                set_ddc_brightness(display, brightness)
-                send_notification(f"Night mode: {brightness}")
-                logging.info(
-                    "%s mode. Display %s brightness is set to: %d",
-                    "Night",
-                    display,
-                    brightness,
-                )
-        return
-
-    if s["dawn"] <= current_time < s["sunrise"]:
-        for display, params in parameters_map.items():
-            brightness = (
-                params["night_brightness"]
-                + (params["day_brightness"] - params["night_brightness"]) // 3
+    for display in parameters_map.items():
+        brightness = get_required_brightness(
+            display[1]["day_brightness"], display[1]["night_brightness"]
+        )
+        current_brightness = get_ddc_brightness(display[0])
+        if current_brightness != brightness:
+            set_ddc_brightness(display[0], brightness)
+            send_notification(f"Display {display[0]}: {brightness}%")
+            logging.info(
+                "Display %s brightness is set to: %d",
+                display[0],
+                brightness,
             )
-            current_brightness = get_ddc_brightness(display)
-            if current_brightness != brightness:
-                set_ddc_brightness(display, brightness)
-                send_notification(f"Morning mode: {brightness}")
-                logging.info(
-                    "%s mode. Display %s brightness is set to: %d",
-                    "Morning",
-                    display,
-                    brightness,
-                )
-        return
-
-    if s["sunrise"] <= current_time < s["sunrise"] + dt.timedelta(hours=1):
-        for display, params in parameters_map.items():
-            brightness = (
-                params["day_brightness"]
-                - (params["day_brightness"] - params["night_brightness"]) // 3
-            )
-            current_brightness = get_ddc_brightness(display)
-            if current_brightness != brightness:
-                set_ddc_brightness(display, brightness)
-                send_notification(f"Morning mode: {brightness}")
-                logging.info(
-                    "%s mode. Display %s brightness is set to: %d",
-                    "Morning",
-                    display,
-                    brightness,
-                )
-        return
-
-    if (
-        s["sunrise"] + dt.timedelta(hours=1)
-        <= current_time
-        < s["sunset"] - dt.timedelta(hours=1)
-    ):
-        for display, params in parameters_map.items():
-            brightness = params["day_brightness"]
-            current_brightness = get_ddc_brightness(display)
-            if current_brightness != brightness:
-                set_ddc_brightness(display, brightness)
-                send_notification(f"Day mode: {brightness}")
-                logging.info(
-                    "%s mode. Display %s brightness is set to: %d",
-                    "Day",
-                    display,
-                    brightness,
-                )
-        return
-
-    if s["sunset"] - dt.timedelta(hours=1) <= current_time < s["sunset"]:
-        for display, params in parameters_map.items():
-            brightness = (
-                params["day_brightness"]
-                - (params["day_brightness"] - params["night_brightness"]) // 3
-            )
-            current_brightness = get_ddc_brightness(display)
-            if current_brightness != brightness:
-                set_ddc_brightness(display, brightness)
-                send_notification(f"Evening mode: {brightness}")
-                logging.info(
-                    "%s mode. Display %s brightness is set to: %d",
-                    "Evening",
-                    display,
-                    brightness,
-                )
-        return
-
-    if s["sunset"] <= current_time < s["dusk"]:
-        for display, params in parameters_map.items():
-            brightness = (
-                params["night_brightness"]
-                + (params["day_brightness"] - params["night_brightness"]) // 3
-            )
-            current_brightness = get_ddc_brightness(display)
-            if current_brightness != brightness:
-                set_ddc_brightness(display, brightness)
-                send_notification(f"Evening mode: {brightness}")
-                logging.info(
-                    "%s mode. Display %s brightness is set to: %d",
-                    "Evening",
-                    display,
-                    brightness,
-                )
-        return
-
-    if s["dusk"] <= current_time:
-        for display, params in parameters_map.items():
-            brightness = params["night_brightness"]
-            current_brightness = get_ddc_brightness(display)
-            if current_brightness != brightness:
-                set_ddc_brightness(display, brightness)
-                send_notification(f"Night mode: {brightness}")
-                logging.info(
-                    "%s mode. Display %s brightness is set to: %d",
-                    "Night",
-                    display,
-                    brightness,
-                )
-        return
+    return
 
 
-def start_app(log_level: str = "info", log_dir: str = LOG_DIR) -> None:
+def start_app(
+    adjust_steps: int,
+    cron_interval: int,
+    sunrise_sunset_offset: int,
+    log_level: str = "info",
+    log_dir: str = LOG_DIR,
+) -> None:
     """
     Starts the application
 
@@ -539,13 +531,17 @@ def start_app(log_level: str = "info", log_dir: str = LOG_DIR) -> None:
     scheduler = BackgroundScheduler()
     # add scheduler job which runs every 20 minutes from 5:00 till 23:00
     my_config = get_config()
+    my_config["adjust_steps"] = adjust_steps
+    my_config["cron_interval"] = cron_interval
+    my_config["sunrise_sunset_offset"] = sunrise_sunset_offset
+    logging.debug("Config: %s", my_config)
     scheduler.add_job(
         brightness_control_main_function,
         replace_existing=True,
         max_instances=1,
         trigger="cron",
         hour="5-23",
-        minute="*/15",
+        minute=f"*/{cron_interval}",
         args=[my_config],
     )
     scheduler.start()
@@ -559,4 +555,4 @@ def start_app(log_level: str = "info", log_dir: str = LOG_DIR) -> None:
 
 
 if __name__ == "__main__":
-    start_app()
+    pass
