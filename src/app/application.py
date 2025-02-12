@@ -346,6 +346,9 @@ def map_display_parameters(
 
     mapped_displays = {}
     season = "winter" if is_winter() else "summer"
+    logging.debug("Season: %s", season)
+
+    logging.debug("Connected displays: %s", connected_displays)
     if not connected_displays:
         return mapped_displays
 
@@ -360,27 +363,28 @@ def map_display_parameters(
         return mapped_displays
 
     monitors = configuration["monitors"]
-    for model in monitors.keys():
-        for display in connected_displays:
-            if (
-                model in display["monitor"]
-                and monitors[model]["serial"] in display["monitor"]
-            ):
+    logging.debug("Monitors: %s", monitors)
+
+    for display in connected_displays:
+        mapped_displays[display["display"]] = {
+            "day_brightness": configuration["default"][season]["day_brightness"],
+            "night_brightness": configuration["default"][season]["night_brightness"],
+        }
+    logging.debug("Default mapping for displays: %s", mapped_displays)
+
+    for display in connected_displays:
+        logging.debug("Display: %s", display)
+        for item in monitors.items():
+            logging.debug("Item: %s", item)
+            model = item[0]
+            serial = item[1].get("serial")
+            if serial in display["monitor"]:
+                logging.debug("Matched monitor: %s", model)
                 mapped_displays[display["display"]] = {
                     "day_brightness": monitors[model][season]["day_brightness"],
                     "night_brightness": monitors[model][season]["night_brightness"],
                 }
-            else:
-                mapped_displays[display["display"]] = {
-                    "day_brightness": configuration["default"][season][
-                        "day_brightness"
-                    ],
-                    "night_brightness": configuration["default"][season][
-                        "night_brightness"
-                    ],
-                }
-
-        return mapped_displays
+    return mapped_displays
 
 
 def send_notification(message: str) -> None:
