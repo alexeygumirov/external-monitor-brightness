@@ -50,14 +50,14 @@ def main():
         "-s",
         "--adjust-steps",
         type=int,
-        help="Number of steps to adjust brightness. (default: 4)",
+        help="Number of steps to adjust brightness. (default: 5)",
         default=None,
     )
     parser.add_argument(
         "-i",
         "--cron-interval",
         type=int,
-        help="Time interval in minutes to check for brightness adjustment. (default: 15)",
+        help="Time interval in minutes to check for brightness adjustment. (default: 10)",
         default=None,  # can be only 10, 15, 20 and 30
     )
     parser.add_argument(

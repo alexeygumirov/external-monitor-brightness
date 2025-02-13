@@ -7,9 +7,9 @@ This Python application is designed to run in the background and automatically a
 The application reads the dawn, sunrise, dusk and sunset times for a specified location and adjusts the brightness of the connected monitors gradually. From dawn to (sunrise + offset) time brightness is gradually increased from the night brightness to the day brightness. From (sunset - offset) to dusk time brightness is gradually decreased from the day brightness to the night brightness.
 The offset is set to 60 minutes by default, but can be changed.
 
-Number of steps for the brightness change is set to 4, but can be set beteween 1 and 10. One step means that brightness is changed at the time close to the dawn to a day brighness value and at the time close to dusk to a night brighness value.
+Number of steps for the brightness change is set to 5, but can be set beteween 1 and 10. One step means that brightness is changed at the time close to the dawn to a day brighness value and at the time close to dusk to a night brighness value.
 
-To monitor and adjust brighness the application starts a cron job that runs every 15 minutes by default between 5:00 and 23:00 (5 AM and 11 PM). Job launch interval can also be changed.
+To monitor and adjust brighness the application starts a cron job that runs every 10 minutes by default between 5:00 and 23:00 (5 AM and 11 PM). Job launch interval can also be changed.
 
 > For more details about the parameters see the [Configuration](#configuration) and [Options](#options) sections.
 
@@ -71,8 +71,8 @@ The configuration file should have the following structure:
   "timezone": "Continent/City",
   "latitude": 50.7014831,
   "longitude": 7.1645746,
-  "cron_interval": 15,
-  "adjust_steps": 4,
+  "cron_interval": 10,
+  "adjust_steps": 5,
   "sunrise_sunset_offset": 60,
   "monitors": {
     "Monitor Model 1": {
@@ -131,9 +131,9 @@ By default, the application will run in the background (the dedicated cron job i
 
 ## Options
 
-- `-i, --cron-interval`: Specify the interval in minutes between brightness adjustments. (default: 15 minutes)
+- `-i, --cron-interval`: Specify the interval in minutes between brightness adjustments. (default: 10 minutes)
     - Can be set to 10, 15, 20, or 30 minutes.
-- `-s, --adjust-steps`: Specify the number of steps for the brightness change. (default: 4)
+- `-s, --adjust-steps`: Specify the number of steps for the brightness change. (default: 5)
     - Can be set between 1 and 10.
 - `-o, --sunrise-sunset-offset`: Specify the offset in minutes for the sunrise and sunset times. (default: 60 minutes)
     - Can be set between 0 and 120 minutes.

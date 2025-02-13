@@ -54,8 +54,8 @@ DEFAULT_CONFIG = {
     "timezone": "Europe/Berlin",
     "latitude": 53.075144,
     "longitude": 8.802161,
-    "adjust_steps": 4,  # Can be in range of 1-10
-    "cron_interval": 15,  # Can be 10, 15,20, 30 min
+    "adjust_steps": 5,  # Can be in range of 1-10
+    "cron_interval": 10,  # Can be 10, 15,20, 30 min
     "sunrise_sunset_offset": 60,  # in minutes, Can be between 0 and 120 minutes
     "default": {
         "summer": {
