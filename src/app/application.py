@@ -180,7 +180,11 @@ def verify_config_inputs(config: dict) -> None:
         sys.exit(1)
 
 
-def get_config() -> dict:
+def get_config(
+    adjust_steps: int = None,
+    cron_interval: int = None,
+    sunrise_sunset_offset: int = None,
+) -> dict:
     """
     Gets the config from the config file
 
@@ -193,9 +197,15 @@ def get_config() -> dict:
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             config = json.loads(f.read())
-        for item in DEFAULT_CONFIG.items():
-            if item[0] not in config:
-                config[item[0]] = item[1]
+        if adjust_steps:
+            config["adjust_steps"] = adjust_steps
+        if cron_interval:
+            config["cron_interval"] = cron_interval
+        if sunrise_sunset_offset:
+            config["sunrise_sunset_offset"] = sunrise_sunset_offset
+        for k, v in DEFAULT_CONFIG.items():
+            if k not in config.keys():
+                config[k] = v
         verify_config_inputs(config)
     except FileNotFoundError:
         logging.error("Config file not found, using default config")
@@ -494,28 +504,26 @@ def brightness_control_main_function(config: dict) -> None:
     parameters_map = map_display_parameters(external_displays, config)
     logging.debug("Parameters map: %s", parameters_map)
 
-    for display in parameters_map.items():
-        brightness = get_required_brightness(
-            display[1]["day_brightness"], display[1]["night_brightness"]
-        )
-        current_brightness = get_ddc_brightness(display[0])
+    for k, v in parameters_map.items():
+        brightness = get_required_brightness(v["day_brightness"], v["night_brightness"])
+        current_brightness = get_ddc_brightness(k)
         if current_brightness != brightness:
-            set_ddc_brightness(display[0], brightness)
-            send_notification(f"Display {display[0]}: {brightness}%")
+            set_ddc_brightness(k, brightness)
+            send_notification(f"Display {k}: {brightness}%")
             logging.info(
                 "Display %s brightness is set to: %d",
-                display[0],
+                k,
                 brightness,
             )
     return
 
 
 def start_app(
-    adjust_steps: int,
-    cron_interval: int,
-    sunrise_sunset_offset: int,
     log_level: str = "info",
     log_dir: str = LOG_DIR,
+    adjust_steps: int = None,
+    cron_interval: int = None,
+    sunrise_sunset_offset: int = None,
 ) -> None:
     """
     Starts the application
@@ -534,10 +542,11 @@ def start_app(
 
     scheduler = BackgroundScheduler()
     # add scheduler job which runs every 20 minutes from 5:00 till 23:00
-    my_config = get_config()
-    my_config["adjust_steps"] = adjust_steps
-    my_config["cron_interval"] = cron_interval
-    my_config["sunrise_sunset_offset"] = sunrise_sunset_offset
+    my_config = get_config(
+        adjust_steps=adjust_steps,
+        cron_interval=cron_interval,
+        sunrise_sunset_offset=sunrise_sunset_offset,
+    )
     logging.debug("Config: %s", my_config)
     scheduler.add_job(
         brightness_control_main_function,
@@ -545,7 +554,7 @@ def start_app(
         max_instances=1,
         trigger="cron",
         hour="5-23",
-        minute=f"*/{cron_interval}",
+        minute=f"*/{my_config['cron_interval']}",
         args=[my_config],
     )
     scheduler.start()

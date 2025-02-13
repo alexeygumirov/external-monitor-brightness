@@ -26,7 +26,7 @@ import argparse
 import sys
 from app.application import start_app
 
-__VERSION__ = "2.1.0"
+__VERSION__ = "2.2.0"
 
 
 def main():
@@ -51,31 +51,33 @@ def main():
         "--adjust-steps",
         type=int,
         help="Number of steps to adjust brightness. (default: 4)",
-        default=4,
+        default=None,
     )
     parser.add_argument(
         "-i",
         "--cron-interval",
         type=int,
         help="Time interval in minutes to check for brightness adjustment. (default: 15)",
-        default=15,  # can be only 10, 15, 20 and 30
+        default=None,  # can be only 10, 15, 20 and 30
     )
     parser.add_argument(
         "-o",
         "--sunrise-sunset-offset",
         type=int,
         help="The offset in minutes to adjust the time of sunrise and sunset (minutes). (default: 60)",
-        default=60,
+        default=None,
     )
 
     arguments = parser.parse_args()
-    if arguments.adjust_steps not in range(1, 11):
+    if arguments.adjust_steps and arguments.adjust_steps not in range(1, 11):
         print("Number of steps must be in the range of 1 - 10")
         sys.exit(1)
-    if arguments.cron_interval not in [10, 15, 20, 30]:
+    if arguments.cron_interval and arguments.cron_interval not in [10, 15, 20, 30]:
         print("Cron interval can be 10, 15, 20 or 30 min")
         sys.exit(1)
-    if arguments.sunrise_sunset_offset < 0 or arguments.sunrise_sunset_offset > 120:
+    if arguments.sunrise_sunset_offset and (
+        arguments.sunrise_sunset_offset < 0 or arguments.sunrise_sunset_offset > 120
+    ):
         print("Sunrise and sunset offset must be in the range of 0 - 120")
         sys.exit(1)
 
