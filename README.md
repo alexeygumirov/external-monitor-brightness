@@ -110,8 +110,8 @@ The configuration file should have the following structure:
 ```
 
 - `city`, `location`, `timezone`, `latitude`, and `longitude` are used to determine the sunrise and sunset times.
-- `cron_interval` (optional) specifies the interval in minutes between brightness adjustments. The default value is 15 minutes. Accepted values are 10, 15, 20 and 30.
-- `adjust_steps` (optional) specifies the number of steps for the brightness change. The default value is 4. Accepted values are 1 to 10.
+- `cron_interval` (optional) specifies the interval in minutes between brightness adjustments. The default value is 10 minutes. Accepted values are 10, 15, 20 and 30.
+- `adjust_steps` (optional) specifies the number of steps for the brightness change. The default value is 5. Accepted values are 1 to 10.
 - `sunrise_sunset_offset` (optional) specifies the offset in minutes for the sunrise and sunset times. Offset is added to the sunrise time and deducted from the sunset time. The default value is 60 minutes. Can be set between 0 and 120 minutes.
 - `default` contains the default brightness settings for monitors not listed in the `monitors` section.
 - `monitors` (optional) contains specific brightness settings for individual monitor models and serial numbers. If not specified, the default settings will be used.
