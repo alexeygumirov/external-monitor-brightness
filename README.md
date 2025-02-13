@@ -4,6 +4,15 @@
 
 This Python application is designed to run in the background and automatically adjust the brightness of external monitors connected to a Linux machine based on the time of day and seasonal changes. It utilizes the [`ddcutil`](https://www.ddcutil.com/) tool to communicate with the monitors via the Display Data Channel (DDC) protocol.
 
+## Montivation
+
+I work a lot at the computer and I have a lot of eyes strain every day.
+One of the problems I met is adjustment of my monitors brightness during the day. I want to keep brightness low at night, gradually increase/decrease it during dawn/dusk. But I want to do it automatically on all external monitors.
+I did look around for a possible solution, but I could not find anything which does exactly what I want.
+So, I wrote my own tool which addresses this issue.
+
+## How it works?
+
 The application reads the dawn, sunrise, dusk and sunset times for a specified location and adjusts the brightness of the connected monitors gradually. From dawn to (sunrise + offset) time brightness is gradually increased from the night brightness to the day brightness. From (sunset - offset) to dusk time brightness is gradually decreased from the day brightness to the night brightness.
 The offset is set to 60 minutes by default, but can be changed.
 
