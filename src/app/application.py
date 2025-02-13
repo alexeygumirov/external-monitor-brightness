@@ -547,7 +547,7 @@ def start_app(
         cron_interval=cron_interval,
         sunrise_sunset_offset=sunrise_sunset_offset,
     )
-    logging.debug("Config: %s", my_config)
+    logging.info("Config: %s", my_config)
     scheduler.add_job(
         brightness_control_main_function,
         replace_existing=True,
