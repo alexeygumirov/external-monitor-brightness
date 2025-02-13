@@ -79,10 +79,10 @@ The configuration file should have the following structure:
       "serial": "Monitor Serial Number",
       "summer": {
         "day_brightness": 100,
-        "night_brightness": 60
+        "night_brightness": 65
       },
       "winter": {
-        "day_brightness": 90,
+        "day_brightness": 95,
         "night_brightness": 60
       }
     }
