@@ -18,7 +18,7 @@ The offset is set to 60 minutes by default, but can be changed.
 
 Number of steps for the brightness change is set to 5, but can be set beteween 1 and 10. One step means that brightness is changed at the time close to the dawn to a day brighness value and at the time close to dusk to a night brighness value.
 
-To monitor and adjust brighness the application starts a cron job that runs every 15 minutes by default between 5:00 and 23:00 (5 AM and 11 PM). Job launch interval can also be changed.
+To monitor and adjust brighness the application starts a cron job that runs every 15 minutes. Job launch interval can also be changed.
 
 > For more details about the parameters see the [Configuration](#configuration) and [Options](#options) sections.
 
@@ -136,7 +136,7 @@ external-monitor-brightness --cron-interval 20 --adjust-steps 5 --sunrise-sunset
 I recommend adding this command to your startup applications to ensure the application starts automatically when you log in.
 If you are using a desktop environment that supports systemd services, you can create a systemd service file to manage the application.
 
-By default, the application will run in the background (the dedicated cron job is created) and adjust the monitor brightness every 15 minutes between 5:00 AM and 11:00 PM.
+By default, the application will run in the background (the dedicated cron job is created) and adjust the monitor brightness every 15 minutes.
 
 ## Options
 
