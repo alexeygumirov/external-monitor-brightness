@@ -5,7 +5,7 @@
     "latitude": 53.075144,
     "longitude": 8.802161,
     "cron_interval": 15,
-    "adjust_steps": 4,
+    "adjust_steps": 6,
     "sunrise_sunset_offset": 60,
     "default": {
         "summer": {

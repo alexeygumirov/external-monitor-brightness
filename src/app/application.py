@@ -31,11 +31,11 @@ import subprocess
 import sys
 from time import sleep
 
+from zoneinfo import ZoneInfo
 import notify2
 from apscheduler.schedulers.background import BackgroundScheduler
 from astral import LocationInfo
 from astral.sun import sun
-from zoneinfo import ZoneInfo
 
 MY_ENV = os.environ.copy()
 HOME_PATH = MY_ENV.get("HOME")
@@ -55,7 +55,7 @@ DEFAULT_CONFIG = {
     "latitude": 53.075144,
     "longitude": 8.802161,
     "adjust_steps": 5,  # Can be in range of 1-10
-    "cron_interval": 10,  # Can be 10, 15,20, 30 min
+    "cron_interval": 12,  # Can be 10, 15,20, 30 min
     "sunrise_sunset_offset": 60,  # in minutes, Can be between 0 and 120 minutes
     "default": {
         "summer": {
@@ -172,8 +172,8 @@ def verify_config_inputs(config: dict) -> None:
     if config["adjust_steps"] not in range(1, 11):
         logging.error("Number of steps must be in the range of 1 - 10")
         sys.exit(1)
-    if config["cron_interval"] not in [10, 15, 20, 30]:
-        logging.error("Cron interval can be 10, 15, 20 or 30 min")
+    if config["cron_interval"] not in [10, 12, 15, 20, 30]:
+        logging.error("Cron interval can be 10, 12, 15, 20 or 30 min")
         sys.exit(1)
     if config["sunrise_sunset_offset"] < 0 or config["sunrise_sunset_offset"] > 120:
         logging.error("Sunrise and sunset offset must be in the range of 0 - 120")
@@ -411,6 +411,136 @@ def send_notification(message: str) -> None:
     notification.show()
 
 
+def get_current_time(config: dict) -> dt.datetime:
+    """
+    Gets the current time
+
+    Returns:
+        dt.datetime: Current time
+    """
+    city_name = config.get("city", DEFAULT_CONFIG.get("city"))
+    country = config.get("location", DEFAULT_CONFIG.get("country"))
+    timezone = config.get("timezone", DEFAULT_CONFIG.get("timezone"))
+    latitude = float(config.get("latitude", DEFAULT_CONFIG.get("latitude")))
+    longitude = float(config.get("longitude", DEFAULT_CONFIG.get("longitude")))
+    city = LocationInfo(city_name, country, timezone, latitude, longitude)
+    current_time = dt.datetime.now(tz=dt.timezone.utc).astimezone(
+        ZoneInfo(city.timezone)
+    )
+    logging.debug("Current time: %s", current_time)
+    return current_time
+
+
+def build_time_intervals(config: dict) -> list[dt.datetime]:
+    """
+    Builds time intervals for gradual brightness adjustment
+
+    Args:
+
+    Returns:
+        list[dt.datetime]: List of datetime objects
+    """
+    city = LocationInfo(
+        config.get("city", DEFAULT_CONFIG.get("city")),
+        config.get("country", DEFAULT_CONFIG.get("country")),
+        config.get("timezone", DEFAULT_CONFIG.get("timezone")),
+        float(config.get("latitude", DEFAULT_CONFIG.get("latitude"))),
+        float(config.get("longitude", DEFAULT_CONFIG.get("longitude"))),
+    )
+    current_time = dt.datetime.now(tz=dt.timezone.utc).astimezone(
+        ZoneInfo(city.timezone)
+    )
+    s = sun(city.observer, date=current_time, tzinfo=city.timezone)
+    logging.debug("Astral data: %s", s)
+    t0 = s["dawn"]
+    t1 = s["sunrise"] + dt.timedelta(minutes=int(config["sunrise_sunset_offset"]))
+    t2 = s["sunset"] - dt.timedelta(minutes=int(config["sunrise_sunset_offset"]))
+    t3 = s["dusk"]
+    adjust_steps = int(config["adjust_steps"])
+
+    time_intervals = []
+    if adjust_steps == 1:
+        time_intervals.extend([t0, t3])
+        return time_intervals
+
+    increase_time_intervals = (t1 - t0) / (adjust_steps - 1)
+    decrease_time_intervals = (t3 - t2) / (adjust_steps - 1)
+    time_intervals.extend(
+        [t0 + i * increase_time_intervals for i in range(adjust_steps)]
+    )
+    time_intervals.extend(
+        [t2 + i * decrease_time_intervals for i in range(adjust_steps)]
+    )
+    return time_intervals
+
+
+def build_brightness_values(
+    day_brightness: int, night_brightness: int, adjust_steps: int
+) -> list[int]:
+    """
+    Builds an array of brightness values for gradual adjustment
+
+    Args:
+        day_brightness (int): Day brightness
+        night_brightness (int): Night brightness
+
+    Returns:
+        list[int]: List of brightness values
+    """
+    logging.debug(
+        "Day brightness: %s, Night brightness: %s, adjust steps: %s",
+        day_brightness,
+        night_brightness,
+        adjust_steps,
+    )
+    brightness_values_array = []
+    brightness_step = (day_brightness - night_brightness) / adjust_steps
+
+    if adjust_steps == 1:
+        brightness_values_array.extend([day_brightness, night_brightness])
+        return brightness_values_array
+
+    brightness_values_array.extend(
+        [int(night_brightness + (i + 1) * brightness_step) for i in range(adjust_steps)]
+    )
+    brightness_values_array.extend(
+        [int(day_brightness - (i + 1) * brightness_step) for i in range(adjust_steps)]
+    )
+    return brightness_values_array
+
+
+def get_required_brightness(
+    time_intervals: list[dt.datetime],
+    brightness_values: list[int],
+    current_time: dt.datetime,
+) -> int:
+    """
+    Returns the required brightness based on the current time
+
+    Args:
+        intervals (list[dt.datetime]): List of datetime objects
+        brightness_values (list[int]): List of brightness values
+
+    Returns:
+        int: Required brightness
+    """
+    if len(time_intervals) != len(brightness_values):
+        logging.error("Time intervals and brightness values do not match")
+        return 0
+
+    brightness_array = list(zip(time_intervals, brightness_values))
+    logging.debug("Brightness array: %s", brightness_array)
+    if current_time < time_intervals[0]:
+        return brightness_array[-1][1]
+    required_brightness = min(
+        brightness_array,
+        key=lambda x: current_time - x[0]
+        if current_time > x[0]
+        else dt.timedelta(hours=24),
+    )
+    return required_brightness[1]
+
+
 def brightness_control_main_function(config: dict) -> None:
     """
     Main function for brightness control
@@ -422,78 +552,6 @@ def brightness_control_main_function(config: dict) -> None:
         None
     """
 
-    def get_required_brightness(day_brightness: int, night_brightness: int) -> int:
-        """
-        Returns the required brightness based on the current time
-
-        Args:
-            day_brightness (int): Day brightness
-            night_brightness (int): Night brightness
-
-        Returns:
-            int: Required brightness
-        """
-        city_name = config.get("city", DEFAULT_CONFIG.get("city"))
-        country = config.get("location", DEFAULT_CONFIG.get("country"))
-        timezone = config.get("timezone", DEFAULT_CONFIG.get("timezone"))
-        latitude = float(config.get("latitude", DEFAULT_CONFIG.get("latitude")))
-        longitude = float(config.get("longitude", DEFAULT_CONFIG.get("longitude")))
-        logging.debug(
-            "City: %s, Country: %s, Timezone: %s", city_name, country, timezone
-        )
-        city = LocationInfo(city_name, country, timezone, latitude, longitude)
-        current_time = dt.datetime.now(tz=dt.timezone.utc).astimezone(
-            ZoneInfo(city.timezone)
-        )
-        s = sun(city.observer, date=current_time, tzinfo=city.timezone)
-        logging.debug("Astral data: %s", s)
-        t0 = s["dawn"]
-        t1 = s["sunrise"] + dt.timedelta(minutes=int(config["sunrise_sunset_offset"]))
-        t2 = s["sunset"] - dt.timedelta(minutes=int(config["sunrise_sunset_offset"]))
-        t3 = s["dusk"]
-        adjust_steps = int(config["adjust_steps"])
-
-        if adjust_steps > 1:
-            increase_time_intervals = (t1 - t0) / (adjust_steps - 1)
-            decrease_time_intervals = (t3 - t2) / (adjust_steps - 1)
-            brightness_step = (day_brightness - night_brightness) / adjust_steps
-
-            brightness_array = []
-            increase_brightness_array = [
-                (
-                    t0 + i * increase_time_intervals,
-                    night_brightness + (i + 1) * brightness_step,
-                )
-                for i in range(adjust_steps)
-            ]
-            decrease_brightness_array = [
-                (
-                    t2 + i * decrease_time_intervals,
-                    day_brightness - (i + 1) * brightness_step,
-                )
-                for i in range(adjust_steps)
-            ]
-            brightness_array.extend(increase_brightness_array)
-            brightness_array.extend(decrease_brightness_array)
-            logging.debug("Brightness array: %s", brightness_array)
-            required_brightness = min(
-                brightness_array,
-                key=lambda x: current_time - x[0]
-                if current_time > x[0]
-                else dt.timedelta(hours=24),
-            )
-            return int(required_brightness[1])
-
-        brightness_array = [(t0, day_brightness), (t3, night_brightness)]
-        logging.debug("Brightness array: %s", brightness_array)
-        required_brightness = min(
-            brightness_array,
-            key=lambda x: current_time - x[0]
-            if current_time > x[0]
-            else dt.timedelta(hours=24),
-        )
-        return required_brightness[1]
-
     if not config:
         config = DEFAULT_CONFIG
 
@@ -504,8 +562,15 @@ def brightness_control_main_function(config: dict) -> None:
     parameters_map = map_display_parameters(external_displays, config)
     logging.debug("Parameters map: %s", parameters_map)
 
+    time_intervals_list = build_time_intervals(config)
+
     for k, v in parameters_map.items():
-        brightness = get_required_brightness(v["day_brightness"], v["night_brightness"])
+        brightness_values = build_brightness_values(
+            v["day_brightness"], v["night_brightness"], config["adjust_steps"]
+        )
+        brightness = get_required_brightness(
+            time_intervals_list, brightness_values, get_current_time(config)
+        )
         current_brightness = get_ddc_brightness(k)
         if current_brightness != brightness:
             set_ddc_brightness(k, brightness)
@@ -553,7 +618,7 @@ def start_app(
         replace_existing=True,
         max_instances=1,
         trigger="cron",
-        hour="5-23",
+        hour="0-23",
         minute=f"*/{my_config['cron_interval']}",
         args=[my_config],
     )

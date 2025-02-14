@@ -18,7 +18,7 @@ The offset is set to 60 minutes by default, but can be changed.
 
 Number of steps for the brightness change is set to 5, but can be set beteween 1 and 10. One step means that brightness is changed at the time close to the dawn to a day brighness value and at the time close to dusk to a night brighness value.
 
-To monitor and adjust brighness the application starts a cron job that runs every 10 minutes by default between 5:00 and 23:00 (5 AM and 11 PM). Job launch interval can also be changed.
+To monitor and adjust brighness the application starts a cron job that runs every 15 minutes by default between 5:00 and 23:00 (5 AM and 11 PM). Job launch interval can also be changed.
 
 > For more details about the parameters see the [Configuration](#configuration) and [Options](#options) sections.
 
@@ -80,7 +80,7 @@ The configuration file should have the following structure:
   "timezone": "Continent/City",
   "latitude": 50.7014831,
   "longitude": 7.1645746,
-  "cron_interval": 10,
+  "cron_interval": 15,
   "adjust_steps": 5,
   "sunrise_sunset_offset": 60,
   "monitors": {
@@ -110,7 +110,7 @@ The configuration file should have the following structure:
 ```
 
 - `city`, `location`, `timezone`, `latitude`, and `longitude` are used to determine the sunrise and sunset times.
-- `cron_interval` (optional) specifies the interval in minutes between brightness adjustments. The default value is 10 minutes. Accepted values are 10, 15, 20 and 30.
+- `cron_interval` (optional) specifies the interval in minutes between brightness adjustments. The default value is 15 minutes. Accepted values are 10, 12, 15, 20 and 30.
 - `adjust_steps` (optional) specifies the number of steps for the brightness change. The default value is 5. Accepted values are 1 to 10.
 - `sunrise_sunset_offset` (optional) specifies the offset in minutes for the sunrise and sunset times. Offset is added to the sunrise time and deducted from the sunset time. The default value is 60 minutes. Can be set between 0 and 120 minutes.
 - `default` contains the default brightness settings for monitors not listed in the `monitors` section.
@@ -140,8 +140,8 @@ By default, the application will run in the background (the dedicated cron job i
 
 ## Options
 
-- `-i, --cron-interval`: Specify the interval in minutes between brightness adjustments. (default: 10 minutes)
-    - Can be set to 10, 15, 20, or 30 minutes.
+- `-i, --cron-interval`: Specify the interval in minutes between brightness adjustments. (default: 15 minutes)
+    - Can be set to 10, 12, 15, 20, or 30 minutes.
 - `-s, --adjust-steps`: Specify the number of steps for the brightness change. (default: 5)
     - Can be set between 1 and 10.
 - `-o, --sunrise-sunset-offset`: Specify the offset in minutes for the sunrise and sunset times. (default: 60 minutes)
