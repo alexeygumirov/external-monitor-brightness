@@ -526,7 +526,7 @@ def get_required_brightness(
     """
     if len(time_intervals) != len(brightness_values):
         logging.error("Time intervals and brightness values do not match")
-        return 0
+        return -1
 
     brightness_array = list(zip(time_intervals, brightness_values))
     logging.debug("Brightness array: %s", brightness_array)
@@ -571,6 +571,9 @@ def brightness_control_main_function(config: dict) -> None:
         brightness = get_required_brightness(
             time_intervals_list, brightness_values, get_current_time(config)
         )
+        if brightness < 0:
+            logging.error("Invalid brightness value: %s", brightness)
+            break
         current_brightness = get_ddc_brightness(k)
         if current_brightness != brightness:
             set_ddc_brightness(k, brightness)
