@@ -1,13 +1,13 @@
 # External Monitor Brightness Auto-adjusting Tool
 
-[Github repository](https://github.com/alexeygumirov/external-monitor-brightness)
+[GitHub repository](https://github.com/alexeygumirov/external-monitor-brightness)
 
 This Python application is designed to run in the background and automatically adjust the brightness of external monitors connected to a Linux machine based on the time of day and seasonal changes. It utilizes the [`ddcutil`](https://www.ddcutil.com/) tool to communicate with the monitors via the Display Data Channel (DDC) protocol.
 
-## Montivation
+## Motivation
 
 I work a lot at the computer and I have a lot of eyes strain every day.
-One of the problems I met is adjustment of my monitors brightness during the day. I want to keep brightness low at night, gradually increase/decrease it during dawn/dusk. But I want to do it automatically on all external monitors.
+One of the problems I met is adjustment of my monitors' brightness during the day. I want to keep brightness low at night, gradually increase/decrease it during dawn/dusk. But I want to do it automatically on all external monitors.
 I did look around for a possible solution, but I could not find anything which does exactly what I want.
 So, I wrote my own tool which addresses this issue.
 
@@ -16,9 +16,10 @@ So, I wrote my own tool which addresses this issue.
 The application reads the dawn, sunrise, dusk and sunset times for a specified location and adjusts the brightness of the connected monitors gradually. From dawn to (sunrise + offset) time brightness is gradually increased from the night brightness to the day brightness. From (sunset - offset) to dusk time brightness is gradually decreased from the day brightness to the night brightness.
 The offset is set to 60 minutes by default, but can be changed.
 
-Number of steps for the brightness change is set to 5, but can be set beteween 1 and 10. One step means that brightness is changed at the time close to the dawn to a day brighness value and at the time close to dusk to a night brighness value.
+Number of steps for the brightness change is set to 5, but can be set between 1 and 10.
+"One-step change" means that brightness changes at the time close to the dawn to a day brightness value and at the time near dusk to the night brightness value.
 
-To monitor and adjust brighness the application starts a cron job that runs every 15 minutes. Job launch interval can also be changed.
+To monitor and adjust brightness the application starts a `cron` job that runs every 15 minutes. Job launch interval can also be changed.
 
 > For more details about the parameters see the [Configuration](#configuration) and [Options](#options) sections.
 
@@ -26,9 +27,9 @@ The image below shows the brightness levels for the day with the dawn at 05:55:0
 
 ![Brightness levels](./images/brightness_chart.png)
 
-The astral times for a given location (in the `config.json` file) are taken fro the [astral](hhttps://astral.readthedocs.io/en/latest/) library. Therefore no internet connection is needed for this application.
+The astral times for a given location (in the `config.json` file) are taken from the [astral](hhttps://astral.readthedocs.io/en/latest/) library. Therefore, no internet connection is needed for this application.
 
-This tool does not work with built-in laptop displays, because ususally their brightness is controlled by the laptop's hardware, and not by the DDC protocol.
+This tool does not work with built-in laptop displays, because usually their brightness is controlled by the laptop's hardware, and not by the DDC protocol.
 
 ## Key Functionality
 
@@ -59,7 +60,7 @@ This tool does not work with built-in laptop displays, because ususally their br
 ./install.sh
 ```
 
-This script will create a virtual environment, install the required Python packages, and create a symbolic link to the application executable in your `~/.local/bin` directory (or `/usr/local/bin` on macOS).
+This script will create a virtual environment, install the required Python packages, and create a symbolic link to the application executable in your `~/.local/bin` directory (or `/usr/local/bin` on Mac OS).
 
 **Note:** You can optionally provide the `-p` flag to specify a custom path for the virtual environment:
 
@@ -134,9 +135,9 @@ external-monitor-brightness --cron-interval 20 --adjust-steps 5 --sunrise-sunset
 ```
 
 I recommend adding this command to your startup applications to ensure the application starts automatically when you log in.
-If you are using a desktop environment that supports systemd services, you can create a systemd service file to manage the application.
+If you are using a desktop environment that supports `systemd` services, you can create a `systemd` service file to manage the application.
 
-By default, the application will run in the background (the dedicated cron job is created) and adjust the monitor brightness every 15 minutes.
+By default, the application will run in the background (the dedicated `cron` job is created) and adjust the monitor brightness every 15 minutes.
 
 ## Options
 
@@ -148,7 +149,7 @@ By default, the application will run in the background (the dedicated cron job i
     - Can be set between 0 and 120 minutes.
 - `-l, --log-directory`: Specify the directory for the application logs. (default: `/tmp/external-monitor-brightness`)
 - `-v, --version`: Display the application version.
-- `-vv, --verbose`: Enable verbose logging. (loging level is set to DEBUG)
+- `-vv, --verbose`: Enable verbose logging. (logging level is set to DEBUG)
 
 ### Environment variables
 
@@ -159,7 +160,7 @@ By default, the application will run in the background (the dedicated cron job i
 
 The application logs can be found in the `/tmp/external-monitor-brightness/application.log` file.
 
-## Uninstallation
+## Uninstall
 
 To uninstall the application, follow these steps:
 
@@ -181,7 +182,7 @@ rm -rf ~/.local/virtualenv/external-monitor-brightness
 rm -rf ~/.config/external-monitor-brightness
 ```
 
-## Contributing
+## Contribution
 
 Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request.
 
