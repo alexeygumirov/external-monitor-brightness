@@ -26,7 +26,7 @@ import argparse
 import sys
 from app.application import start_app
 
-__VERSION__ = "2.3.1"
+__VERSION__ = "2.3.2"
 
 
 def main():

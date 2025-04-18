@@ -388,7 +388,7 @@ def map_display_parameters(
             logging.debug("Item: %s", item)
             model = item[0]
             serial = item[1].get("serial")
-            if serial in display["monitor"]:
+            if serial.lower() in display["monitor"]:
                 logging.debug("Matched monitor: %s", model)
                 mapped_displays[display["display"]] = {
                     "day_brightness": monitors[model][season]["day_brightness"],
