@@ -1,4 +1,4 @@
-# External Monitor Brightness Auto-adjusting Tool
+# Automatic Monitor Brightness Setup Tool for Linux
 
 [GitHub repository](https://github.com/alexeygumirov/external-monitor-brightness)
 
