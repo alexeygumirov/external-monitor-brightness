@@ -2,7 +2,7 @@
 
 [GitHub repository](https://github.com/alexeygumirov/external-monitor-brightness)
 
-This Python application is designed to run in the background and automatically adjust the brightness of external monitors connected to a Linux machine based on the time of day and seasonal changes. It utilizes the [`ddcutil`](https://www.ddcutil.com/) tool to communicate with the monitors via the Display Data Channel (DDC) protocol.
+This Python application is designed to run in the background and automatically adjust the brightness of external monitors connected to a Linux machine based on the time of day and seasonal changes. This tool automatically adapts to the changling daylight length. It utilizes the [`ddcutil`](https://www.ddcutil.com/) tool to communicate with the monitors via the Display Data Channel (DDC) protocol.
 
 ## Motivation
 
