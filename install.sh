@@ -21,6 +21,18 @@ check_python_version() {
     fi
 }
 
+check_ddcutil_presence() {
+    if ! command -v ddcutil &> /dev/null; then
+        echo "Warning! This application requires `ddcutil` to be installed."
+        read -p "Do you want to continue? (y/n): " choice
+        case "$choice" in
+            y|Y ) echo "Continuing installation...";;
+            n|N ) echo "Installation aborted."; exit 1;;
+            * ) echo "Invalid choice. Installation aborted."; exit 1;;
+        esac
+    fi
+}
+
 # Create parsing of input parameters/switches for this script. If no -p switch is provided, the default virtual environment path is used.
 while getopts ":p:" opt; do
     case $opt in
@@ -41,6 +53,9 @@ done
 if [ -z "$VENV_PATH" ]; then
     VENV_PATH=$VENV_DEFAULT_PATH
 fi
+
+echo "Checking if ddcutil is installed"
+check_ddcutil_presence
 
 echo "Checking if Python is installed"
 check_python_version
