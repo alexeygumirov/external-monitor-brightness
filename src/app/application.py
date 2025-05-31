@@ -55,7 +55,7 @@ DEFAULT_CONFIG = {
     "latitude": 53.075144,
     "longitude": 8.802161,
     "adjust_steps": 5,  # Can be in range of 1-10
-    "cron_interval": 12,  # Can be 10, 15,20, 30 min
+    "cron_interval": 10,  # Can be 5, 10, 12, 15, 20, 30 min
     "sunrise_sunset_offset": 60,  # in minutes, Can be between 0 and 120 minutes
     "default": {
         "summer": {
@@ -172,8 +172,8 @@ def verify_config_inputs(config: dict) -> None:
     if config["adjust_steps"] not in range(1, 11):
         logging.error("Number of steps must be in the range of 1 - 10")
         sys.exit(1)
-    if config["cron_interval"] not in [10, 12, 15, 20, 30]:
-        logging.error("Cron interval can be 10, 12, 15, 20 or 30 min")
+    if config["cron_interval"] not in [5, 10, 12, 15, 20, 30]:
+        logging.error("Cron interval can be 5, 10, 12, 15, 20 or 30 min")
         sys.exit(1)
     if config["sunrise_sunset_offset"] < 0 or config["sunrise_sunset_offset"] > 120:
         logging.error("Sunrise and sunset offset must be in the range of 0 - 120")

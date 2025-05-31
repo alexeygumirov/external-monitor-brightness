@@ -19,7 +19,7 @@ The offset is set to 60 minutes by default, but can be changed.
 Number of steps for the brightness change is set to 5, but can be set between 1 and 10.
 "One-step change" means that brightness changes at the time close to the dawn to a day brightness value and at the time near dusk to the night brightness value.
 
-To monitor and adjust brightness the application starts a `cron` job that runs every 15 minutes. Job launch interval can also be changed.
+To monitor and adjust brightness the application starts a `cron` job that runs every 10 minutes. Job launch interval can also be changed.
 
 > For more details about the parameters see the [Configuration](#configuration) and [Options](#options) sections.
 
@@ -81,7 +81,7 @@ The configuration file should have the following structure:
   "timezone": "Continent/City",
   "latitude": 50.7014831,
   "longitude": 7.1645746,
-  "cron_interval": 15,
+  "cron_interval": 10,
   "adjust_steps": 5,
   "sunrise_sunset_offset": 60,
   "monitors": {
@@ -111,7 +111,7 @@ The configuration file should have the following structure:
 ```
 
 - `city`, `location`, `timezone`, `latitude`, and `longitude` are used to determine the sunrise and sunset times.
-- `cron_interval` (optional) specifies the interval in minutes between brightness adjustments. The default value is 15 minutes. Accepted values are 10, 12, 15, 20 and 30.
+- `cron_interval` (optional) specifies the interval in minutes between brightness adjustments. The default value is 10 minutes. Accepted values are 5, 10, 12, 15, 20 and 30.
 - `adjust_steps` (optional) specifies the number of steps for the brightness change. The default value is 5. Accepted values are 1 to 10.
 - `sunrise_sunset_offset` (optional) specifies the offset in minutes for the sunrise and sunset times. Offset is added to the sunrise time and deducted from the sunset time. The default value is 60 minutes. Can be set between 0 and 120 minutes.
 - `default` contains the default brightness settings for monitors not listed in the `monitors` section.
